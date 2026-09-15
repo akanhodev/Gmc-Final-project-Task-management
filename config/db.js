@@ -1,9 +1,13 @@
 const mongoose = require('mongoose');
 
+const RETRY_DELAY_MS = 5000;
+
 /**
  * Establishes a connection to MongoDB using the URI defined in the
- * environment variables. Exits the process on failure so that the
- * app never runs in a half-connected state.
+ * environment variables. Retries on failure instead of killing the
+ * process, so a transient outage (e.g. Atlas IP whitelist not yet
+ * propagated) doesn't take the whole server down — requests just wait
+ * on Mongoose's operation buffering until the connection comes up.
  */
 const connectDB = async () => {
   try {
@@ -15,11 +19,13 @@ const connectDB = async () => {
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.warn('MongoDB disconnected');
+      console.warn('MongoDB disconnected, retrying...');
+      setTimeout(connectDB, RETRY_DELAY_MS);
     });
   } catch (error) {
     console.error(`Failed to connect to MongoDB: ${error.message}`);
-    process.exit(1);
+    console.error(`Retrying in ${RETRY_DELAY_MS / 1000}s...`);
+    setTimeout(connectDB, RETRY_DELAY_MS);
   }
 };
 

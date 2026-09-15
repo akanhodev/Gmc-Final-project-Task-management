@@ -1,0 +1,26 @@
+html, body { margin: 0; padding: 0; background: #E9E4D8; }
+* { box-sizing: border-box; }
+input, textarea, select, button { font-family: inherit; }
+::placeholder { color: #ABA495; }
+::selection { background: #E9CFC2; }
+
+a { color: #B4512C; text-decoration: none; }
+a:hover { color: #8E3A19; text-decoration: underline; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes slidein { from { transform: translateX(28px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes glow { from { opacity: .55; } to { opacity: .9; } }
+
+/* Hover / focus states. Everything else is an inline style object so the
+   design tokens stay in one place (src/theme.js). */
+.field:focus { border-color: #B4512C; box-shadow: 0 0 0 3px rgba(180,81,44,.12); outline: none; }
+.btn-primary:hover { background: #9C4222; transform: translateY(-1px); }
+.btn-primary:active { transform: none; }
+.btn-dark:hover { background: #33302A; }
+.btn-ghost:hover { background: #F2EEE4; }
+.btn-danger:hover { background: #F6E6DD; border-color: #EBD2C4; }
+.nav-item:hover { color: #F7F4ED; }
+.task-row:hover { transform: translateY(-1px); border-color: #DCD4C2;
+  box-shadow: 0 1px 2px rgba(30,28,23,.04), 0 14px 26px -18px rgba(30,28,23,.30); }
+.task-check:hover { border-color: #B4512C; }
+.cal-chip:hover { opacity: .72; }
