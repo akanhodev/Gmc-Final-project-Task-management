@@ -1,17 +1,40 @@
 const Task = require('../models/Task');
 
+const PRIORITY_WEIGHT = { high: 0, medium: 1, low: 2 };
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // @desc    Get all tasks belonging to the logged-in user
 // @route   GET /api/tasks
 // @access  Private
+// @query   status   - filter by task status (pending | in-progress | completed)
+// @query   search   - case-insensitive match against title or description
+// @query   sortBy   - deadline | priority | createdAt (default: createdAt)
+// @query   order    - asc | desc (default: asc for deadline/priority, desc for createdAt)
 const getTasks = async (req, res, next) => {
   try {
-    const { status, sort } = req.query;
+    const { status, search, sortBy, order } = req.query;
     const filter = { user: req.user._id };
     if (status) filter.status = status;
+    if (search) {
+      const re = new RegExp(escapeRegExp(search), 'i');
+      filter.$or = [{ title: re }, { description: re }];
+    }
 
-    const sortOption = sort === 'deadline' ? { deadline: 1 } : { createdAt: -1 };
+    const tasks = await Task.find(filter);
 
-    const tasks = await Task.find(filter).sort(sortOption);
+    const dir = order === 'desc' ? -1 : order === 'asc' ? 1 : null;
+    if (sortBy === 'priority') {
+      const d = dir ?? 1;
+      tasks.sort((a, b) => d * (PRIORITY_WEIGHT[a.priority] - PRIORITY_WEIGHT[b.priority]));
+    } else if (sortBy === 'deadline') {
+      const d = dir ?? 1;
+      const time = (t) => (t.deadline ? new Date(t.deadline).getTime() : Infinity);
+      tasks.sort((a, b) => d * (time(a) - time(b)));
+    } else {
+      const d = dir ?? -1;
+      tasks.sort((a, b) => d * (new Date(a.createdAt) - new Date(b.createdAt)));
+    }
+
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
   } catch (error) {
     next(error);

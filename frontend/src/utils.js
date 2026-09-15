@@ -55,9 +55,23 @@ export function initialsOf(name) {
     .join('') || 'A';
 }
 
-export function sortTasks(list) {
+const PRIORITY_WEIGHT = { high: 0, medium: 1, low: 2 };
+
+export function sortTasks(list, sortBy, order) {
+  const dir = order === 'desc' ? -1 : 1;
   return list.slice().sort((a, b) => {
     if ((a.status === 'completed') !== (b.status === 'completed')) return a.status === 'completed' ? 1 : -1;
-    return String(a.deadline || '9999').localeCompare(String(b.deadline || '9999'));
+    if (sortBy === 'priority') {
+      const diff = PRIORITY_WEIGHT[a.priority] - PRIORITY_WEIGHT[b.priority];
+      if (diff !== 0) return dir * diff;
+      return 0;
+    }
+    return dir * String(a.deadline || '9999').localeCompare(String(b.deadline || '9999'));
   });
+}
+
+export function matchesQuery(task, query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (task.title || '').toLowerCase().includes(q) || (task.description || '').toLowerCase().includes(q);
 }
